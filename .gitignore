@@ -1,4 +1,7 @@
 .vscode
 
 # Variables de entorno privadas
+node_modules/
 .env
+data/*.db
+logs/*.log
