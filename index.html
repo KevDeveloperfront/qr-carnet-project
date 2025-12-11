@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/styles.css">
+  <title>Admin - Crear Ficha</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-semibold mb-4">Admin - Crear Ficha</h1>
+
+    <form id="form" class="grid gap-3">
+      <div class="grid grid-cols-3 gap-3">
+        <input name="nombre" placeholder="Nombre completo" class="col-span-2 p-2 border rounded" required />
+        <input name="rango" placeholder="Rango / Cargo" class="p-2 border rounded" />
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <input name="comando" placeholder="Comando / Unidad" class="col-span-3 p-2 border rounded" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <input name="tipo_sangre" placeholder="Tipo de sangre" class="p-2 border rounded" />
+        <input name="alergias" placeholder="Alergias (coma separadas)" class="p-2 border rounded" />
+      </div>
+
+      <textarea name="condiciones" placeholder="Condiciones médicas importantes" rows="3"
+                class="p-2 border rounded"></textarea>
+
+      <div>
+        <label class="block text-sm font-medium">Contactos de emergencia (uno por línea)</label>
+        <textarea name="contactos" placeholder="Juan: +549..." rows="3" class="w-full p-2 border rounded"></textarea>
+      </div>
+
+      <div class="flex gap-2">
+        <button id="crear" type="button" class="px-4 py-2 bg-blue-600 text-white rounded">Crear ficha</button>
+        <button id="reset" type="button" class="px-4 py-2 bg-gray-200 rounded">Limpiar</button>
+      </div>
+    </form>
+
+    <div class="mt-6 grid grid-cols-2 gap-4">
+      <div>
+        <h2 class="font-medium">QR</h2>
+        <div id="qr" class="mt-2 p-4 bg-white border rounded"></div>
+      </div>
+      <div>
+        <h2 class="font-medium">Enlace / ID</h2>
+        <pre id="result" class="p-2 bg-slate-100 rounded text-xs"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/admin.js"></script>
+</body>
+</html>
