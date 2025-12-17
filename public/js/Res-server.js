@@ -8,13 +8,16 @@ const { nanoid } = require('nanoid');
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'Proyect-Qr-Generator**';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'changeme';
 const BASE_URL = process.env.BASE_URL || '';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// 👉 MOTOR DE VISTAS (HTML)
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 /* =======================
    DATABASE
@@ -22,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.sqlite');
+
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const db = new sqlite3.Database(DB_FILE);
@@ -30,7 +34,7 @@ console.log('✅ SQLite conectado:', DB_FILE);
 db.run(`
   CREATE TABLE IF NOT EXISTS fichas (
     id TEXT PRIMARY KEY,
-    nombre TEXT,
+    nombre TEXT NOT NULL,
     rango TEXT,
     comando TEXT,
     tipo_sangre TEXT,
@@ -55,71 +59,61 @@ function requireAdmin(req, res, next) {
 }
 
 /* =======================
-   ROUTES
+   STATIC
 ======================= */
 
-// raíz → admin
-app.get('/', (req, res) => {
-  res.redirect('/admin');
-});
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// admin panel
+/* =======================
+   ADMIN
+======================= */
+
 app.get('/admin', requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// crear ficha
-app.post('/api/fichas', requireAdmin, (req, res) => {
-  const {
-    nombre,
-    rango,
-    comando,
-    tipo_sangre,
-    alergias,
-    condiciones,
-    contactos
-  } = req.body;
+/* =======================
+   API (JSON)
+======================= */
 
-  if (!nombre) return res.status(400).send('Nombre requerido');
+app.post('/api/fichas', requireAdmin, (req, res) => {
+  const { nombre, rango } = req.body;
+  if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
 
   const id = 'fc_' + nanoid(10);
 
   db.run(
-    `INSERT INTO fichas VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    [
-      id,
-      nombre,
-      rango || '',
-      comando || '',
-      tipo_sangre || '',
-      alergias || '',
-      condiciones || '',
-      contactos || ''
-    ],
-    err => {
-      if (err) return res.status(500).send('DB error');
+    `INSERT INTO fichas (id, nombre, rango) VALUES (?, ?, ?)`,
+    [id, nombre, rango || ''],
+    () => {
       const origin = BASE_URL || `${req.protocol}://${req.get('host')}`;
       res.json({ id, url: `${origin}/qr/${id}` });
     }
   );
 });
 
-// ficha pública HTML
+app.get('/api/fichas/:id', (req, res) => {
+  db.get(
+    'SELECT * FROM fichas WHERE id = ?',
+    [req.params.id],
+    (err, row) => {
+      if (!row) return res.status(404).json({ error: 'No encontrada' });
+      res.json(row);
+    }
+  );
+});
+
+/* =======================
+   HTML PÚBLICO (QR)
+======================= */
+
 app.get('/qr/:id', (req, res) => {
   db.get(
     'SELECT * FROM fichas WHERE id = ?',
     [req.params.id],
     (err, ficha) => {
       if (!ficha) return res.status(404).send('Ficha no encontrada');
-
-      const templatePath = path.join(__dirname, 'templates', 'profile.html');
-      let html = fs.readFileSync(templatePath, 'utf8');
-
-      Object.entries(ficha).forEach(([key, value]) => {
-        html = html.replaceAll(`{{${key}}}`, value || '');
-      });
-
-      res.send(html);
+      res.render('qr', { ficha });
     }
   );
 });

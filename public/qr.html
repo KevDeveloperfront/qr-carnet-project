@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ficha QR</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; }
+    h1 { margin-bottom: .5rem; }
+    pre { background: #f5f5f5; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Ficha personal</h1>
+  <pre id="data">Cargando...</pre>
+
+  <script>
+    const id = location.pathname.split('/').pop();
+
+    fetch('/api/fichas/' + id)
+      .then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(data => {
+        document.getElementById('data').textContent =
+          JSON.stringify(data, null, 2);
+      })
+      .catch(() => {
+        document.getElementById('data').textContent =
+          'Ficha no encontrada';
+      });
+  </script>
+</body>
+</html>
